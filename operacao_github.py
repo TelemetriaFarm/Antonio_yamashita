@@ -603,7 +603,13 @@ class MasterFarmAnalyzer:
             name = "Desconhecido"
             if c.get('canplugID'):
                 iot = self._fazer_requisicao(self.canplug_iot_url.format(c['canplugID']))
-                if iot: name = iot.get('installed_in', {}).get('name', 'Maq')
+                # CORREÇÃO AQUI: Garante que installed_in seja um dicionário mesmo se vier nulo
+                if iot:
+                    installed_in = iot.get('installed_in')
+                    if installed_in and isinstance(installed_in, dict):
+                        name = installed_in.get('name', 'Maq')
+                    else:
+                        name = 'Maq'
             
             for i in imps:
                 if str(i).isdigit():

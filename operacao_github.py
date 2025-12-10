@@ -13,12 +13,11 @@ import sys
 
 # --- CONFIGURAÇÕES FIXAS (PARA O GITHUB) ---
 GROWER_ID_FIXO = 3463039
-# Dias para analisar para trás (ex: 5 dias)
 DIAS_ANALISE = 7 
 
 ESTACOES_FIXAS = [
     {
-        'id_grower': 3463039,  # Mantido o anterior (não identificado na imagem)
+        'id_grower': 3463039, 
         'name': 'Yamashita',
         'id_estacao': 80158,
         'latitude': -9.9628,
@@ -57,6 +56,19 @@ VELOCIDADE_LIMITE_PARADO = 0.1
 DURACAO_MINIMA_PARADA_SEG = 90
 MAX_PULSE_GAP_SECONDS = 180
 AREA_MINIMA_BLOCO_HA = 4.0
+
+# --- CLASSE PARA CORREÇÃO DE ERROS JSON (DATAS E NUMPY) ---
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # Converte datetime e date para string ISO
+        if isinstance(obj, (datetime, datetime.date)):
+            return obj.isoformat()
+        # Converte tipos numéricos do Numpy para nativos do Python
+        if isinstance(obj, (np.integer, np.int64, np.int32)):
+            return int(obj)
+        if isinstance(obj, (np.floating, np.float64, np.float32)):
+            return float(obj)
+        return super().default(obj)
 
 class AnalisadorTelemetriaClima:
     def __init__(self, session: requests.Session):
@@ -648,13 +660,15 @@ class AnalisadorTelemetriaClima:
             
             dados_janela = df_dia[['Datetime', 'duration_sec', 'Operating_Mode', 'CondicaoAplicacao']].copy()
             
+            # --- CORREÇÃO AQUI: cls=CustomJSONEncoder ---
             eventos_calendario.append({
-                'date': data_obj, 'title': self.machine_names_map.get(implement_id, f"ID {implement_id}"),
+                'date': data_obj, 
+                'title': self.machine_names_map.get(implement_id, f"ID {implement_id}"),
                 'implement_id': implement_id,
                 'summary_html': resumo_html,
-                'all_day_segments_json': json.dumps(segmentos_mapa),
-                'available_metrics_json': json.dumps(available_metrics),
-                'borders_json': json.dumps([{"name": b.get("field_name"), "coords": b.get("coordinates")} for b in self.cache_limites_talhoes.values() if b]),
+                'all_day_segments_json': json.dumps(segmentos_mapa, cls=CustomJSONEncoder),
+                'available_metrics_json': json.dumps(available_metrics, cls=CustomJSONEncoder),
+                'borders_json': json.dumps([{"name": b.get("field_name"), "coords": b.get("coordinates")} for b in self.cache_limites_talhoes.values() if b], cls=CustomJSONEncoder),
                 'dados_janela_json': dados_janela.to_json(orient='records', date_format='iso')
             })
 

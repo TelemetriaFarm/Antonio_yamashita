@@ -1,0 +1,54 @@
+name: Execução Diária de Telemetria
+
+on:
+  schedule:
+    # Executa às 10:00 UTC (06:00 horário de Cuiabá) todos os dias
+    - cron: '0 10 * * *'
+  workflow_dispatch: # Permite rodar manualmente clicando no botão
+
+permissions:
+  contents: write # Permissão OBRIGATÓRIA para o robô conseguir atualizar o site
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Baixar o código do repositório
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2. Instalar o Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # 3. Instalar as bibliotecas (pandas, shapely, etc.)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Executar o script e Mover o arquivo certo
+      - name: Run Python script
+        env:
+          FARM_USER: ${{ secrets.FARM_USER }}
+          FARM_PASS: ${{ secrets.FARM_PASS }}
+        run: |
+          # Roda o script (que agora gera o arquivo 'index.html')
+          python operacao_github.py
+          
+          # Cria a pasta 'dist' que o publicador exige
+          mkdir dist
+          
+          # CORREÇÃO CRÍTICA: Move o index.html (não mais o nome antigo)
+          mv index.html dist/
+
+      # 5. Publicar o site na branch gh-pages
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: dist
+          clean: true

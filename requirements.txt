@@ -1,0 +1,9 @@
+pandas
+numpy
+requests
+shapely
+pyproj
+scikit-learn
+openpyxl
+pytz
+python-dotenv

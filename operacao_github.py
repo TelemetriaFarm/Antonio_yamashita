@@ -13,7 +13,7 @@ import os
 
 # --- CONFIGURAÇÕES FIXAS (Clima) ---
 # Se quiser fixar um ID de produtor para pular o input, altere aqui. Se deixar None, ele pergunta.
-GROWER_ID_FIXO = None 
+GROWER_ID_FIXO =  1139788
 
 # Dados da Estação (Hardcoded para não precisar subir Excel)
 # Adicione mais estações aqui se necessário
